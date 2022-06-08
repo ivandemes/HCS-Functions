@@ -148,7 +148,7 @@ Function New-HCSite {
 
     If (!($Url))
         {
-            $Url = "https://cloud.vmwarehorizon.com/portal/v1/sites"
+            $Url = "https://cloud.vmwarehorizon.com/portal/v2/sites"
         }
 
     $Header = @{
@@ -159,11 +159,10 @@ Function New-HCSite {
     $Body = @{
 	    "name" = "$Name";
         "description" = "$Description";
-        "orgId" = "$OrganizationId";
-        "id" = "site-id-12345"
+        "orgId" = "$OrganizationId"
     }
 
-    Invoke-RestMethod -Uri "$Url" -Method Post -Headers $Header -Body $Body -UseBasicParsing
+    Invoke-RestMethod -Uri "$Url" -Method Post -Headers $Header -Body ($Body | ConvertTo-Json) -UseBasicParsing
 }
 
 
@@ -185,6 +184,86 @@ Function Get-HCSites {
     }
 
     Invoke-RestMethod -Uri "$Url" -Method Get -Headers $Header -UseBasicParsing
+}
+
+
+Function Get-HCProvider {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True)] [string]$AccessToken,
+        [Parameter(Mandatory=$False)] [string]$Url
+    )
+
+    If (!($Url))
+        {
+            $Url = "https://cloud.vmwarehorizon.com/admin/v1/providers"
+        }
+
+    $Header = @{
+        "Content-Type" = "application/json";
+        "Authorization" = "Bearer " + $AccessToken
+    }
+
+    Invoke-RestMethod -Uri "$Url" -Method Get -Headers $Header -UseBasicParsing
+}
+
+
+Function New-HCProviderInstance {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True)] [string]$AccessToken,
+        [Parameter(Mandatory=$False)] [string]$Url,
+        [Parameter(Mandatory=$True)] [string]$OrganizationId,
+        [Parameter(Mandatory=$True)] [string]$Name,
+        [Parameter(Mandatory=$True)] [string]$Environment,
+        [Parameter(Mandatory=$True)] [string]$DirectoryId,
+        [Parameter(Mandatory=$True)] [string]$SubscriptionId,
+        [Parameter(Mandatory=$True)] [string]$ApplicationId,
+        [Parameter(Mandatory=$True)] [string]$ApplicationKey,
+        [Parameter(Mandatory=$True)] [string]$Region
+    )
+
+    If (!($Url))
+        {
+            $Url = "https://cloud.vmwarehorizon.com/admin/v1/dem-settings"
+        }
+
+    $Header = @{
+        "Content-Type" = "application/json";
+        "Authorization" = "Bearer " + $AccessToken
+    }
+
+    $Body = @{
+        "denyOperations" = @("EDGE_DEPLOYMENT");        
+	    "name" = "$Name";
+        "orgId" = "$OrganizationId";
+        "providerDetails" = @()
+    }
+
+    Invoke-RestMethod -Uri "$Url" -Method Post -Headers $Header -Body ($Body | ConvertTo-Json) -UseBasicParsing
+}
+
+
+Function Get-HCProviderInstance {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True)] [string]$AccessToken,
+        [Parameter(Mandatory=$False)] [string]$Url,
+        [Parameter(Mandatory=$True)] [string]$Label
+    )
+
+    If (!($Url))
+        {
+            $Url = "https://cloud.vmwarehorizon.com/admin/v2/providers/" + $Label + "/instances"
+        }
+
+    $Header = @{
+        "Content-Type" = "application/json";
+        "Authorization" = "Bearer " + $AccessToken
+    }
+
+    Write-Output (Invoke-RestMethod -Uri "$Url" -Method Get -Headers $Header -UseBasicParsing).content
+    #Invoke-RestMethod -Uri "$Url" -Method Get -Headers $Header -UseBasicParsing
 }
 
 
